@@ -1,16 +1,26 @@
 # mqtt_cc2
 
-A new Flutter project.
+Projeto referente a materia de Ciencias da computação 2 
+
+Professor: Cristiano Nunes.
 
 ## Getting Started
 
-This project is a starting point for a Flutter application.
+Para inicializar o projeto:
 
-A few resources to get you started if this is your first Flutter project:
+Instale a SDK do Flutter, de acordo com seu sistema operacional.
 
-- [Lab: Write your first Flutter app](https://flutter.dev/docs/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://flutter.dev/docs/cookbook)
+https://flutter.dev/docs/get-started/install
 
-For help getting started with Flutter, view our
-[online documentation](https://flutter.dev/docs), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+
+rode o Comando:
+```
+flutter pub get;
+```
+Este comando e responsavel por baixar todas as dependencias do projeto.
+
+```
+flutter run;
+```
+
+Este comando roda seu app em debug mode.

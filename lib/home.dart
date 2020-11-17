@@ -1,63 +1,74 @@
 import 'package:flutter/material.dart';
-import 'dart:async';
-import 'dart:io';
 import 'package:mqtt_client/mqtt_client.dart';
 import 'package:mqtt_client/mqtt_server_client.dart';
+
+import 'main.dart';
 
 class Home extends StatefulWidget {
   @override
   _HomeState createState() => _HomeState();
 }
 
+// http://www.hivemq.com/demos/websocket-client/
 class _HomeState extends State<Home> {
+  final scaffoldKey = GlobalKey<ScaffoldState>();
+  final topic = 'testtopic/flutter';
   MqttClient client;
   bool isConnected = false;
   String message = '';
-  // http://www.hivemq.com/demos/websocket-client/
+  List<String> messages = List<String>();
+
   setup() async {
     client = MqttServerClient(
       'broker.mqttdashboard.com',
-      'clientId-i4hdkpVSsI',
+      'clientId-zfSZ2gFxM5',
     );
     client.autoReconnect = true;
     client.logging(on: true);
     client.keepAlivePeriod = 90;
-    client.onDisconnected = () {
-      print('desconectado');
-      isConnected = false;
-      setState(() {});
-      return;
-    };
+    client.onDisconnected = () => disconnect;
     try {
-      await client.connect();
-      if (client.connectionStatus.state != MqttConnectionState.connected) {
-        client.disconnect();
-        isConnected = false;
-        return;
-      }
-
-      isConnected = true;
-      client.subscribe('flutter/1', MqttQos.exactlyOnce);
-      client.published.listen((MqttPublishMessage event) {
-        this.message += '\n' +
-            MqttPublishPayload.bytesToStringAsString(event.payload.message);
-        setState(() {});
-      });
-
-      client.updates
-          .listen((List<MqttReceivedMessage<MqttMessage>> listEvents) {
-        listEvents.forEach((element) {
-          final MqttPublishMessage recMess = element.payload;
-          final messagebytes =
-              MqttPublishPayload.bytesToStringAsString(recMess.payload.message);
-          message += '\n' + messagebytes;
-          setState(() {});
-        });
-      });
+      connect();
+      subscribeToTopic();
+      //readLastMessagesFromMqttServer();
       setState(() {});
     } catch (e) {
       print(e);
     }
+  }
+
+  connect() async {
+    await client.connect();
+    if (client.connectionStatus.state != MqttConnectionState.connected) {
+      client.disconnect();
+      isConnected = false;
+      return;
+    }
+    isConnected = true;
+    setState(() {});
+  }
+
+  subscribeToTopic() {
+    client.subscribe(topic, MqttQos.exactlyOnce);
+
+    client.updates.listen((List<MqttReceivedMessage<MqttMessage>> listEvents) {
+      listEvents.forEach((element) {
+        final MqttPublishMessage recMess = element.payload;
+        this.messages.add(
+            MqttPublishPayload.bytesToStringAsString(recMess.payload.message));
+        setState(() {});
+      });
+    });
+    setState(() {});
+  }
+
+  readLastMessagesFromMqttServer() {
+    client.published.listen((MqttPublishMessage event) {
+      this
+          .messages
+          .add(MqttPublishPayload.bytesToStringAsString(event.payload.message));
+      setState(() {});
+    });
   }
 
   @override
@@ -67,20 +78,88 @@ class _HomeState extends State<Home> {
   }
 
   @override
+  void dispose() {
+    disconnect();
+    super.dispose();
+  }
+
+  Future disconnect() async {
+    isConnected = false;
+    setState(() {});
+    client.disconnect();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
+      key: scaffoldKey,
       appBar: AppBar(
         title: Text('MQTT CC2'),
-      ),
-      body: Column(
-        children: [
-          Center(
-            child: Text(
-              isConnected ? 'Conectado com sucesso' : 'Falha na conexão',
+        actions: [
+          IconButton(
+            icon: Icon(
+              isConnected ? Icons.wifi : Icons.wifi_off,
+              color: isConnected ? Colors.blue : Colors.red,
             ),
-          ),
-          Text('$message')
+            onPressed: () {
+              isConnected ? disconnect() : connect();
+            },
+          )
         ],
+      ),
+      body: messages.length == 0
+          ? Center(
+              child: Text('Publique uma mensagem :)'),
+            )
+          : ListView.builder(
+              itemCount: messages.length,
+              itemBuilder: (_, index) {
+                return ListTile(
+                  title: Text(messages[index]),
+                  leading: Icon(Icons.message),
+                  trailing: Icon(Icons.check),
+                );
+              },
+            ),
+      floatingActionButton: FloatingActionButton(
+        child: Icon(Icons.add),
+        onPressed: () {
+          showModalBottomSheet(
+            context: context,
+            builder: (context) => SingleChildScrollView(
+              child: Container(
+                height: MediaQuery.of(context).size.height * 0.40,
+                padding: const EdgeInsets.symmetric(horizontal: 30),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                  children: [
+                    Text(
+                      'Digite a messagem que deseja publicar',
+                      style: Theme.of(context).textTheme.headline5,
+                      textAlign: TextAlign.center,
+                    ),
+                    TextField(
+                      decoration: InputDecoration(
+                          labelText: 'Digite o Texto',
+                          icon: Icon(Icons.message)),
+                      onChanged: (value) => message = value,
+                    ),
+                    FlatButton(
+                        color: Colors.amber,
+                        onPressed: () {
+                          var builder = MqttClientPayloadBuilder();
+                          builder.addString(message);
+                          client.publishMessage(
+                              topic, MqttQos.exactlyOnce, builder.payload);
+                          MyApp.navigationKey.currentState.pop();
+                        },
+                        child: Text('Publicar')),
+                  ],
+                ),
+              ),
+            ),
+          );
+        },
       ),
     );
   }
