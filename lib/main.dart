@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'home.dart';
 
 void main() {
-  runApp(MyApp());
+  runApp(new MyApp());
 }
 
 class MyApp extends StatelessWidget {
@@ -12,10 +12,10 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-        title: 'Flutter Demo',
+        title: 'MQTT CC2',
         navigatorKey: navigationKey,
         theme: ThemeData(
-          primarySwatch: Colors.amber,
+          primarySwatch: Colors.lightGreen,
           visualDensity: VisualDensity.adaptivePlatformDensity,
         ),
         home: Home());

@@ -21,10 +21,9 @@ class _HomeState extends State<Home> {
   setup() async {
     client = MqttServerClient(
       'broker.mqttdashboard.com',
-      'clientId-zfSZ2gFxM5',
+      'clientId-PV6Kp5KwFP',
     );
     client.autoReconnect = true;
-    client.logging(on: true);
     client.keepAlivePeriod = 90;
     client.onDisconnected = () => disconnect;
     try {
@@ -45,11 +44,14 @@ class _HomeState extends State<Home> {
       return;
     }
     isConnected = true;
+    print(isConnected);
+    subscribeToTopic();
     setState(() {});
   }
 
   subscribeToTopic() {
     client.subscribe(topic, MqttQos.exactlyOnce);
+    print('subscribed');
 
     client.updates.listen((List<MqttReceivedMessage<MqttMessage>> listEvents) {
       listEvents.forEach((element) {
@@ -86,6 +88,7 @@ class _HomeState extends State<Home> {
   Future disconnect() async {
     isConnected = false;
     setState(() {});
+    print('disconnected');
     client.disconnect();
   }
 
@@ -151,6 +154,7 @@ class _HomeState extends State<Home> {
                           builder.addString(message);
                           client.publishMessage(
                               topic, MqttQos.exactlyOnce, builder.payload);
+                          print(message);
                           MyApp.navigationKey.currentState.pop();
                         },
                         child: Text('Publicar')),
