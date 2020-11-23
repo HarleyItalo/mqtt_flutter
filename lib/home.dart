@@ -129,36 +129,46 @@ class _HomeState extends State<Home> {
         onPressed: () {
           showModalBottomSheet(
             context: context,
-            builder: (context) => SingleChildScrollView(
-              child: Container(
-                height: MediaQuery.of(context).size.height * 0.40,
-                padding: const EdgeInsets.symmetric(horizontal: 30),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.spaceAround,
-                  children: [
-                    Text(
-                      'Digite a messagem que deseja publicar',
-                      style: Theme.of(context).textTheme.headline5,
-                      textAlign: TextAlign.center,
-                    ),
-                    TextField(
-                      decoration: InputDecoration(
-                          labelText: 'Digite o Texto',
-                          icon: Icon(Icons.message)),
-                      onChanged: (value) => message = value,
-                    ),
-                    FlatButton(
-                        color: Colors.amber,
-                        onPressed: () {
-                          var builder = MqttClientPayloadBuilder();
-                          builder.addString(message);
-                          client.publishMessage(
-                              topic, MqttQos.exactlyOnce, builder.payload);
-                          print(message);
-                          MyApp.navigationKey.currentState.pop();
-                        },
-                        child: Text('Publicar')),
-                  ],
+            builder: (context) => Scaffold(
+              resizeToAvoidBottomInset: false,
+              resizeToAvoidBottomPadding: false,
+              body: SingleChildScrollView(
+                reverse: true,
+                child: Container(
+                  height: MediaQuery.of(context).size.height * 0.50,
+                  padding: const EdgeInsets.symmetric(horizontal: 30),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: [
+                      Text(
+                        'Digite a messagem que deseja publicar',
+                        style: Theme.of(context).textTheme.headline5,
+                        textAlign: TextAlign.center,
+                      ),
+                      Padding(
+                        padding: EdgeInsets.only(
+                            bottom: MediaQuery.of(context).viewInsets.bottom),
+                        child: TextField(
+                          decoration: InputDecoration(
+                            labelText: 'Digite o Texto',
+                            icon: Icon(Icons.message),
+                          ),
+                          onChanged: (value) => message = value,
+                        ),
+                      ),
+                      FlatButton(
+                          color: Colors.amber,
+                          onPressed: () {
+                            var builder = MqttClientPayloadBuilder();
+                            builder.addString(message);
+                            client.publishMessage(
+                                topic, MqttQos.exactlyOnce, builder.payload);
+                            print(message);
+                            MyApp.navigationKey.currentState.pop();
+                          },
+                          child: Text('Publicar')),
+                    ],
+                  ),
                 ),
               ),
             ),
